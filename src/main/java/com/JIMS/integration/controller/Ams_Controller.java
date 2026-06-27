@@ -59,7 +59,9 @@ public class Ams_Controller {
     @Autowired
     private Asset_type_service asset_type_service;
 
-
+    // --------------------------------------------------------------------
+    // 🔹 1. CREATE — Insert new Asset Type
+    // --------------------------------------------------------------------
     @PostMapping
     public ResponseEntity<Object> insert_asset_type(@RequestBody Asset_type asset_type) {
         try {
