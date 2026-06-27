@@ -45,19 +45,26 @@ import com.JIMS.integration.interfaces.Asset_type_service;
 
 
 
-
+/**
+ * ✅ AMS Controller — Handles all REST endpoints related to Asset Type Management
+ * Endpoints include Create, Read, Update, and Validation of Asset Types.
+ */
 
 @CrossOrigin
 @RestController
-@RequestMapping("api/ams") 
+@RequestMapping("api/ams") // Base URL for all APIs in this controller
 public class Ams_Controller {
 
- 
+    // Injecting Service Layer Dependency
     @Autowired
     private Asset_type_service asset_type_service;
     
     
- 
+
+
+    // --------------------------------------------------------------------
+    // 🔹 1. CREATE — Insert new Asset Type
+    // --------------------------------------------------------------------
     @PostMapping
     public ResponseEntity<Object> insert_asset_type(@RequestBody Asset_type asset_type) {
         try {
