@@ -75,7 +75,7 @@ public class Ams_Controller {
         } catch (Exception ex) {
             System.out.println(ex);
 
-            return ResponseEntity.status(HttpStatus.OK)
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ex);
         }
     }
