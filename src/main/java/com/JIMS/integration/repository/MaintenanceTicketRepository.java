@@ -262,4 +262,16 @@ public interface MaintenanceTicketRepository
 
             ,nativeQuery = true)
         Map<String, Object> getWorkerEmailByUserId(@Param("userId") Integer userId);
+    
+    
+    
+    @Query(value ="""
+    		select MACHINE_DESC_ID  from MAINTENANCE_TICKET where TICKET_ID =:tikcetid
+    		""",nativeQuery = true)
+
+    String getMachineDesCription(@Param("tikcetid") Integer tikcetid);
+    
+    
+    
+    
 }

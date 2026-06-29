@@ -12,7 +12,13 @@ import com.JIMS.integration.entity.ActivityCategory;
 
 @Repository
 public interface Activity_Category_Repository extends JpaRepository<ActivityCategory, Integer> {
-	List<ActivityCategory> findByActivityName(String activityName);
+	
+	//List<ActivityCategory> findByActivityName(String activityName);
+	
+	
+	boolean existsByActivityNameAndTypeId(
+            String activityName,
+            Integer typeId);
 
     @Query(value = "SELECT ACTIVITY_ID, ACTIVITY_NAME FROM ACTIVITY_CATEGORY_MASTER", nativeQuery = true)
     List<Object[]> findActivityIdAndNameOnly();

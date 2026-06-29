@@ -159,11 +159,11 @@ public interface MaintenanceWorkLogRepository
                M.employee_display_name AS WORKER_NAME       
            FROM MAINTENANCE_WORK_LOG WL       
            LEFT JOIN MaintenanceWorkerMapping M ON WL.WORKER_ID = M.Worker_EmpCode       
-           WHERE WL.TICKET_ID=:ticketId 
+           WHERE WL.TICKET_ID=:ticketId  and  M.Machine_Category_Id=:machinedes
 		   ORDER BY WL.LOG_ID
     		""",
         nativeQuery = true)
-    List<Map<String, Object>> getLogsForTicket(@Param("ticketId") Integer ticketId);
+    List<Map<String, Object>> getLogsForTicket(@Param("ticketId") Integer ticketId,@Param("machinedes") String machinedes);
     
     @Query(value =
             """
@@ -204,7 +204,7 @@ ORDER BY WL.LOG_ID
     // ── TOTAL HOURS FOR TICKET ────────────────────────────────────────────
     @Query(value =
         "SELECT ISNULL(SUM(WORK_HOURS),0) FROM MAINTENANCE_WORK_LOG " +
-        "WHERE TICKET_ID=:ticketId AND STATUS IN(2,3)",
+        "WHERE TICKET_ID=:ticketId AND STATUS IN(1,2,3)",
         nativeQuery = true)
     Object getTotalWorkHours(@Param("ticketId") Integer ticketId);
 
@@ -215,7 +215,7 @@ ORDER BY WL.LOG_ID
         "    SUM(WL.PAUSED_MINUTES) AS TOTAL_PAUSED_MINUTES " +
         "FROM MAINTENANCE_WORK_LOG WL " +
         "LEFT JOIN MaintenanceWorkerMapping M ON WL.WORKER_ID = M.Worker_EmpCode " +
-        "WHERE WL.TICKET_ID=:ticketId AND WL.STATUS IN(2,3) " +
+        "WHERE WL.TICKET_ID=:ticketId AND WL.STATUS IN(1,2,3) " +
         "GROUP BY WL.WORKER_ID, M.employee_display_name",
         nativeQuery = true)
     List<Map<String, Object>> getWorkerHoursForTicket(@Param("ticketId") Integer ticketId);

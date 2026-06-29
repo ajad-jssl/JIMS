@@ -169,51 +169,51 @@ public class basic_authforG2users {
 	    	            Map<String, Object> loginStatus =
 	    	                    checkUserAlreadyLoggedIn(userId);
 
-//	    	            if (loginStatus != null) {
-//
-//	    	                Object isLoggedInRaw = loginStatus.get("is_loggedin_new");
-//
-//	    	                int isLoggedIn = 0;
-//
-//	    	                if (isLoggedInRaw instanceof Boolean) {
-//	    	                    isLoggedIn = ((Boolean) isLoggedInRaw) ? 1 : 0;
-//	    	                } else if (isLoggedInRaw instanceof Number) {
-//	    	                    isLoggedIn = ((Number) isLoggedInRaw).intValue();
-//	    	                }
-//
-//	    	                Timestamp lastSeen =
-//	    	                        (Timestamp) loginStatus.get("last_seen");
-//
-//	    	                if (isLoggedIn == 1 && lastSeen != null) {
-//
-//	    	                    long expiryMillis = 3 * 60 * 1000L; // 3 minutes
-//
-//	    	                    long remainingMillis =
-//	    	                            (lastSeen.getTime() + expiryMillis)
-//	    	                                    - System.currentTimeMillis();
-//
-//	    	                    if (remainingMillis > 0) {
-//
-//	    	                        long seconds = remainingMillis / 1000;
-//	    	                        long minutes = seconds / 60;
-//	    	                        long secs = seconds % 60;
-//
-//	    	                        String waitTime =
-//	    	                                minutes > 0
-//	    	                                ? minutes + " min " + secs + " sec"
-//	    	                                : secs + " sec";
-//
-//	    	                        return ResponseEntity
-//	    	                                .status(HttpStatus.UNAUTHORIZED)
-//	    	                                .body("{\"success\":false,"
-//	    	                                        + "\"message\":\"User already logged in from another session. Please wait "
-//	    	                                        + waitTime
-//	    	                                        + " before logging in again.\"}");
-//	    	                    }
-//
-//	    	             
-//	    	                }
-//	    	            }
+	    	            if (loginStatus != null) {
+
+	    	                Object isLoggedInRaw = loginStatus.get("is_loggedin_new");
+
+	    	                int isLoggedIn = 0;
+
+	    	                if (isLoggedInRaw instanceof Boolean) {
+	    	                    isLoggedIn = ((Boolean) isLoggedInRaw) ? 1 : 0;
+	    	                } else if (isLoggedInRaw instanceof Number) {
+	    	                    isLoggedIn = ((Number) isLoggedInRaw).intValue();
+	    	                }
+
+	    	                Timestamp lastSeen =
+	    	                        (Timestamp) loginStatus.get("last_seen");
+
+	    	                if (isLoggedIn == 1 && lastSeen != null) {
+
+	    	                    long expiryMillis = 3 * 60 * 1000L; // 3 minutes
+
+	    	                    long remainingMillis =
+	    	                            (lastSeen.getTime() + expiryMillis)
+	    	                                    - System.currentTimeMillis();
+
+	    	                    if (remainingMillis > 0) {
+
+	    	                        long seconds = remainingMillis / 1000;
+	    	                        long minutes = seconds / 60;
+	    	                        long secs = seconds % 60;
+
+	    	                        String waitTime =
+	    	                                minutes > 0
+	    	                                ? minutes + " min " + secs + " sec"
+	    	                                : secs + " sec";
+
+	    	                        return ResponseEntity
+	    	                                .status(HttpStatus.UNAUTHORIZED)
+	    	                                .body("{\"success\":false,"
+	    	                                        + "\"message\":\"User already logged in from another session. Please wait "
+	    	                                        + waitTime
+	    	                                        + " before logging in again.\"}");
+	    	                    }
+
+	    	             
+	    	                }
+	    	            }
 	    	          
 
 	    	            // Generate JWT

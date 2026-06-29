@@ -57,16 +57,24 @@ public class ActivityCategoryController {
         }
     }
 
-    @GetMapping("check/activity")
-    public ResponseEntity<Object> checkDuplicate(@RequestParam String activityName) {
-        List<ActivityCategory> duplicate = activity_service.checkDuplicate(activityName);
+	@GetMapping("/check/activity")
+	public ResponseEntity<?> checkDuplicate(
 
-        if (!duplicate.isEmpty()) {
-            return ResponseEntity.ok(Map.of("exists", true, "activityId", duplicate.get(0).getActivityId()));
-        } else {
-            return ResponseEntity.ok(Map.of("exists", false));
-        }
-    }
+	        @RequestParam String activityName,
+
+	        @RequestParam Integer typeId){
+
+	    boolean exists = activity_service
+	            .checkDuplicate(
+	                    activityName,
+	                    typeId);
+
+	    return ResponseEntity.ok(
+	            Map.of(
+	                    "exists",
+	                    exists));
+
+	}
 
     @PutMapping("modified/{id}")
     public ResponseEntity<Object> modifyActivity(

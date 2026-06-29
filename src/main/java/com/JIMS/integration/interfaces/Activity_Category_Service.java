@@ -29,11 +29,16 @@ public class Activity_Category_Service {
     public void addActivity(ActivityCategory activityCategory) {
         activity_repo.save(activityCategory);
     }
+    public boolean checkDuplicate(
+            String activityName,
+            Integer typeId){
 
-    public List<ActivityCategory> checkDuplicate(String activityName) {
-        return activity_repo.findByActivityName(activityName);
+        return activity_repo
+                .existsByActivityNameAndTypeId(
+                        activityName,
+                        typeId);
+
     }
-
     public List<Object[]> getActivityIdAndNameOnly() {
         return activity_repo.findActivityIdAndNameOnly();
     }

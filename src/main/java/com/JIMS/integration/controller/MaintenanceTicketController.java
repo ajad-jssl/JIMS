@@ -1,6 +1,7 @@
 package com.JIMS.integration.controller;
 
 import com.JIMS.integration.config.EmailConfig;
+import com.JIMS.integration.entity.AssignService;
 import com.JIMS.integration.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -12,6 +13,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import javax.sql.DataSource;
 
@@ -354,6 +356,12 @@ public class MaintenanceTicketController {
     // 6. ASSIGN TICKET TO WORKER(S)
     // POST /api/ticket/assign
     // ═══════════════════════════════════════════════════════════════════════
+    
+    
+ 
+    @Autowired
+    private AssignService assignService;
+    
     @PostMapping("/assign")
     public ResponseEntity<?> assignTicket(
             @RequestParam Integer         ticketId,
@@ -375,11 +383,14 @@ public class MaintenanceTicketController {
             String machineName = ticketDetail != null ? String.valueOf(ticketDetail.get("MACHINE_SUBCODE"))     : "";
             String whatBroke   = ticketDetail != null ? String.valueOf(ticketDetail.get("WHAT_BROKE"))   : "";
             String problemDesc = ticketDetail != null ? String.valueOf(ticketDetail.get("PROBLEM_DESC")) : "";
+            
  
+            Integer lastAssignId = null;
+
             for (Integer workerId : workerIds) {
  
                 // ── DB assign + in-app notification (unchanged) ──────────────
-                assignRepo.assignTicket(ticketId, factoryId, workerId, assignedBy, assignNote);
+            	lastAssignId=    assignService.assignTicket(ticketId, factoryId, workerId, assignedBy, assignNote);
  
                 String notifMsg = ticketDetail != null
                     ? "Ticket " + ticketNo + " assigned to you. What broke: " + whatBroke
@@ -432,9 +443,10 @@ public class MaintenanceTicketController {
             // Notify ticket raiser (unchanged)
             String raiserMsg = "Your ticket " + ticketNo + " has been assigned. Work will begin shortly.";
             notifRepo.sendNotification(ticketId, factoryId, reportedBy, "ASSIGNED", raiserMsg);
- 
+            response.put("assignId", lastAssignId); 
             response.put("status",  true);
             response.put("message", "Ticket assigned to " + workerIds.size() + " worker(s)");
+            
             return ResponseEntity.ok(response);
  
         } catch (Exception e) {
@@ -660,12 +672,14 @@ List<Map<String, Object>> items =
         Map<String, Object> response = new HashMap<>();
         try {
             Map<String, Object> ticketDetail = ticketRepo.getTicketDetail(ticketId);
+            
+    String machineDescription=       ticketRepo.getMachineDesCription(ticketId);
             Integer oldStatus = ticketDetail != null ? (Integer) ticketDetail.get("STATUS") : 4;
 
-            List<Map<String, Object>> logs = workLogRepo.getLogsForTicket(ticketId);
+            List<Map<String, Object>> logs = workLogRepo.getLogsForTicket(ticketId,machineDescription);
             for (Map<String, Object> log : logs) {
                 Object statusObj = log.get("STATUS");
-                if (statusObj != null && ((Number) statusObj).intValue() == 2) {
+                if (statusObj != null && ((Number) statusObj).intValue() == 2 ) {
                     workLogRepo.closeLog(((Number) log.get("LOG_ID")).intValue(), closedBy);
                 }
             }
@@ -745,11 +759,40 @@ List<Map<String, Object>> items =
     // REPLACE the old Integer version with this String version:
     @GetMapping("/workerTickets")
     public ResponseEntity<?> getWorkerTickets(
-            @RequestParam Integer  workerId,     // ← String EmpCode
+            @RequestParam Integer workerId,     // ← String EmpCode
             @RequestParam Integer factoryId) {
-        return ResponseEntity.ok(assignRepo.getTicketsForWorker(workerId, factoryId));
+
+        List<Map<String, Object>> tickets = assignRepo.getTicketsForWorker(workerId, factoryId);
+
+        if (tickets.isEmpty()) {
+            return ResponseEntity.ok(tickets);
+        }
+
+        // ── Collect distinct ticket IDs from the worker's tickets ──────────────
+        List<Integer> ticketIds = tickets.stream()
+                .map(t -> (Integer) t.get("TICKET_ID"))
+                .distinct()
+                .collect(Collectors.toList());
+
+        // ── Fetch all assignees for these tickets in one go ─────────────────────
+        List<Map<String, Object>> allAssigns = assignRepo.getAssignsForTickets(ticketIds, factoryId);
+
+        // ── Group assigns by TICKET_ID ──────────────────────────────────────────
+        Map<Integer, List<Map<String, Object>>> assignsByTicket = allAssigns.stream()
+                .collect(Collectors.groupingBy(a -> (Integer) a.get("TICKET_ID")));
+
+        // ── Attach "assigns" list into each ticket row (wrap in mutable map) ────
+        List<Map<String, Object>> result = tickets.stream()
+                .map(t -> {
+                    Map<String, Object> mutable = new HashMap<>(t);
+                    Integer ticketId = (Integer) mutable.get("TICKET_ID");
+                    mutable.put("assigns", assignsByTicket.getOrDefault(ticketId, Collections.emptyList()));
+                    return mutable;
+                })
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(result);
     }
- 
     // ═══════════════════════════════════════════════════════════════════════
     // 14. WORK HOURS SUMMARY
     // GET /api/ticket/workHours?ticketId=
@@ -759,7 +802,9 @@ List<Map<String, Object>> items =
         Map<String, Object> response = new HashMap<>();
         response.put("totalHours",  workLogRepo.getTotalWorkHours(ticketId));
         response.put("workerHours", workLogRepo.getWorkerHoursForTicket(ticketId));
-        response.put("logs",        workLogRepo.getLogsForTicket(ticketId));
+        
+      String machinedes=  ticketRepo.getMachineDesCription(ticketId);
+        response.put("logs",        workLogRepo.getLogsForTicket(ticketId,machinedes));
         return ResponseEntity.ok(response);
     }
 

@@ -15,21 +15,44 @@ public interface MaintenanceTicketAssignRepository
         extends JpaRepository<MaintenanceTicketAssign, Integer> {
 
     // ── ASSIGN A TICKET TO A WORKER ───────────────────────────────────────
-    @Modifying
-    @Transactional
-    @Query(value =
-        "INSERT INTO MAINTENANCE_TICKET_ASSIGN " +
-        "(TICKET_ID, FACTORY_ID, ASSIGNED_TO, ASSIGNED_BY, " +
-        " ASSIGNED_DATE, ASSIGN_NOTE, STATUS, CREATED_DATE) " +
-        "VALUES (:ticketId, :factoryId, :assignedTo, :assignedBy, " +
-        "        GETDATE(), :assignNote, 1, GETDATE())",
-        nativeQuery = true)
-    void assignTicket(
-        @Param("ticketId")   Integer ticketId,
-        @Param("factoryId")  Integer factoryId,
-        @Param("assignedTo") Integer assignedTo,
-        @Param("assignedBy") Integer assignedBy,
-        @Param("assignNote") String  assignNote);
+//    @Modifying
+//    @Transactional
+//    @Query(value =
+//        "INSERT INTO MAINTENANCE_TICKET_ASSIGN " +
+//        "(TICKET_ID, FACTORY_ID, ASSIGNED_TO, ASSIGNED_BY, " +
+//        " ASSIGNED_DATE, ASSIGN_NOTE, STATUS, CREATED_DATE) " +
+//        "VALUES (:ticketId, :factoryId, :assignedTo, :assignedBy, " +
+//        "        GETDATE(), :assignNote, 1, GETDATE())",
+//        nativeQuery = true)
+//    void assignTicket(
+//        @Param("ticketId")   Integer ticketId,
+//        @Param("factoryId")  Integer factoryId,
+//        @Param("assignedTo") Integer assignedTo,
+//        @Param("assignedBy") Integer assignedBy,
+//        @Param("assignNote") String  assignNote);
+	
+	
+	
+	
+	   @Modifying
+	    @Transactional
+	    @Query(value =
+	        "INSERT INTO MAINTENANCE_TICKET_ASSIGN " +
+	        "(TICKET_ID, FACTORY_ID, ASSIGNED_TO, ASSIGNED_BY, " +
+	        " ASSIGNED_DATE, ASSIGN_NOTE, STATUS, CREATED_DATE) " +
+	        "OUTPUT INSERTED.ASSIGN_ID " +     // ← THIS LINE IS THE ONLY REAL CHANGE
+	        "VALUES (:ticketId, :factoryId, :assignedTo, :assignedBy, " +
+	        "        GETDATE(), :assignNote, 1, GETDATE())",
+	        nativeQuery = true)
+	    Integer assignTicket(    // ← changed from void to Integer
+	        @Param("ticketId")   Integer ticketId,
+	        @Param("factoryId")  Integer factoryId,
+	        @Param("assignedTo") Integer assignedTo,
+	        @Param("assignedBy") Integer assignedBy,
+	        @Param("assignNote") String  assignNote);
+    
+    
+    
 
     // ── GET ASSIGNMENTS FOR A TICKET ─────────────────────────────────────
     @Query(value =
@@ -124,6 +147,19 @@ public interface MaintenanceTicketAssignRepository
     	    nativeQuery = true)
     	List<Map<String, Object>> getTicketsForWorker(
     	    @Param("workerId")  Integer workerId,
+    	    @Param("factoryId") Integer factoryId);
+    
+    
+    
+    @Query(value =
+    	    "SELECT A.TICKET_ID, A.STATUS, U.USER_NAME AS WORKER_NAME " +
+    	    "FROM MAINTENANCE_TICKET_ASSIGN A " +
+    	    "LEFT JOIN mis.dbo.USERS U ON A.ASSIGNED_TO = U.USER_ID " +
+    	    "WHERE A.TICKET_ID IN (:ticketIds) " +
+    	    "AND   A.FACTORY_ID = :factoryId",
+    	    nativeQuery = true)
+    	List<Map<String, Object>> getAssignsForTickets(
+    	    @Param("ticketIds") List<Integer> ticketIds,
     	    @Param("factoryId") Integer factoryId);
 
     // ── UPDATE ASSIGN STATUS ──────────────────────────────────────────────
